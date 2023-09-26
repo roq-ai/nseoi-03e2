@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions      = [pgcrypto]
+}
+
+model administrator {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String   @db.Uuid
+  name         String   @db.VarChar(255)
+  phone_number String   @db.VarChar(255)
+  address      String   @db.VarChar(255)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  user         user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model client {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  data        data[]
+}
+
+model data {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  option_type  String   @db.VarChar(255)
+  strike_price Int
+  expiry_date  DateTime @db.Timestamp(6)
+  client_id    String   @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  client       client   @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model option_chain_analysis {
+  id                           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at                   DateTime  @default(now()) @db.Timestamp(6)
+  updated_at                   DateTime  @default(now()) @db.Timestamp(6)
+  strike_price                 Float
+  expiry_date                  DateTime  @db.Timestamp(6)
+  option_type                  String?   @db.VarChar(255)
+  last_traded_price            Float?
+  volume_traded_today          Int?
+  open_interest                Int?
+  implied_volatility           Float?
+  change_in_open_interest      Int?
+  previous_day_volume          Int?
+  historical_volatility        Float?
+  delta                        Float?
+  greeks                       String?   @db.VarChar(255)
+  theta                        Float?
+  vega                         Float?
+  option_chain_timestamp       DateTime  @db.Timestamp(6)
+  underlying_asset             String?   @db.VarChar(255)
+  option_chain_analysis        String?
+  analysis_timestamp           DateTime? @db.Timestamp(6)
+  option_chain_trend           String?   @db.VarChar(255)
+  option_chain_sentiment       String?   @db.VarChar(255)
+  analysis_summary             String?
+  analysis_accuracy            Float?
+  analysis_confidence_interval Float?
+  analysis_comments            String?
+  analysis_update_frequency    String?   @db.VarChar(255)
+  option_chain_prediction      Float?
+}
+
+model owner {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String   @db.Uuid
+  name         String   @db.VarChar(255)
+  phone_number String   @db.VarChar(255)
+  address      String   @db.VarChar(255)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  user         user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String          @unique @db.VarChar(255)
+  firstName     String?         @db.VarChar(255)
+  lastName      String?         @db.VarChar(255)
+  roq_user_id   String          @db.VarChar(255)
+  tenant_id     String          @db.VarChar(255)
+  created_at    DateTime        @default(now()) @db.Timestamp(6)
+  updated_at    DateTime        @default(now()) @db.Timestamp(6)
+  administrator administrator[]
+  client        client[]
+  owner         owner[]
+}
